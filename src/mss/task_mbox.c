@@ -174,7 +174,7 @@ void MmwDemo_mboxReadTask(UArg arg0, UArg arg1)
                                             (MMWAVE_SDK_VERSION_MINOR << 16) |
                                             (MMWAVE_SDK_VERSION_MAJOR << 24);
     outputMessage.subFrameNumber = 0;
-
+    /**** INFO: Finished preparing header ****/
 
     /* wait for new message and process all the messages received from the peer */
     while(1)
@@ -313,8 +313,9 @@ void MmwDemo_mboxReadTask(UArg arg0, UArg arg1)
                         UART_write (gMmwMssMCB.loggingUartHandle, (uint8_t *)gMmwMssMCB.pointCloud, gMmwMssMCB.pointCloud->header.length);
                     }
 
+/*********** TODO: 添加自定义数据的串口通信 *******************/
                     if(gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length) {
-                        /* If any targets tracked, send send target List TLV  */
+                        /* If any targets tracked, send target List TLV  */
                         if (gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length%sizeof(MmwDemo_output_message_target) != sizeof(MmwDemo_output_message_tl)) {
                             System_printf("Header Length: %i\n", gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length);
                             DebugP_assert(0);
