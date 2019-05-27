@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://bitbucket.itg.ti.com/scm/mmwave_apps/lab0020_pplcount_overhead.git
+	branch = lab0020V3.2.2
+	commit = cd268239967a12045bd224ef99dbe40435154ec5
+	parent = 63cd6e1ed990330398fec1b5e0228045d1cef66c
+	cmdver = 0.3.1
