@@ -313,7 +313,7 @@ void MmwDemo_mboxReadTask(UArg arg0, UArg arg1)
                         UART_write (gMmwMssMCB.loggingUartHandle, (uint8_t *)gMmwMssMCB.pointCloud, gMmwMssMCB.pointCloud->header.length);
                     }
 
-/*********** TODO: 添加自定义数据的串口通信 *******************/
+/*TODO: 添加自定义数据的串口通信 *******************/
                     if(gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length) {
                         /* If any targets tracked, send target List TLV  */
                         if (gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length%sizeof(MmwDemo_output_message_target) != sizeof(MmwDemo_output_message_tl)) {

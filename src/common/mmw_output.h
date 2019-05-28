@@ -87,7 +87,10 @@ typedef enum MmwDemo_output_message_type_e
     /*! @brief   Stats information */
     MMWDEMO_OUTPUT_MSG_STATS,
 
-    MMWDEMO_OUTPUT_MSG_MAX
+    MMWDEMO_OUTPUT_MSG_MAX,
+
+    /* DONE: 添加人位置信息类型 */
+    MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST;
 } MmwDemo_output_message_type;
 
 /*!
@@ -97,45 +100,45 @@ typedef enum MmwDemo_output_message_type_e
  * @details
  *  The structure defines the message header.
  */
-typedef struct MmwDemo_output_message_header_t
-{
-    /*! @brief   Output buffer magic word (sync word). It is initialized to  {0x0102,0x0304,0x0506,0x0708} */
-    uint16_t    magicWord[4];
+    typedef struct MmwDemo_output_message_header_t{
+        /*! @brief   Output buffer magic word (sync word). It is initialized to  {0x0102,0x0304,0x0506,0x0708} */
+        uint16_t magicWord[4];
 
-    /*! @brief SW Version: : MajorNum * 2^24 + MinorNum * 2^16 + BugfixNum * 2^8 + BuildNum   */
-    uint32_t    version;
+        /*! @brief SW Version: : MajorNum * 2^24 + MinorNum * 2^16 + BugfixNum * 2^8 + BuildNum   */
+        uint32_t version;
 
-    /*! @brief HW platform type */
-    uint32_t    platform;
+        /*! @brief HW platform type */
+        uint32_t platform;
 
-    /*! @brief Time in CPU cycles when the message was created, R4F CPU cycles */
-    uint32_t    timeStamp;
+        /*! @brief Time in CPU cycles when the message was created, R4F CPU cycles */
+        uint32_t timeStamp;
 
-    /*! @brief   Total packet length including header in Bytes */
-    uint32_t    totalPacketLen;
-    
-    /*! @brief   Frame number */
-    uint32_t    frameNumber;
+        /*! @brief   Total packet length including header in Bytes */
+        uint32_t totalPacketLen;
 
-    /*! @brief   For Advanced Frame config, this is the sub-frame number in the range
+        /*! @brief   Frame number */
+        uint32_t frameNumber;
+
+        /*! @brief   For Advanced Frame config, this is the sub-frame number in the range
      * 0 to (number of subframes - 1). For frame config (not advanced), this is always
      * set to 0. */
-    uint32_t    subFrameNumber;
+        uint32_t subFrameNumber;
 
-    /*! @brief Detection Layer Margins */
-    uint32_t    chirpProcessingMargin;
-    uint32_t    frameProcessingMargin;
-    
-    /*! @brief Localization Layer Timing */
-    uint32_t    trackingProcessingTime;
-    uint32_t    uartSendingTime;
+        /*! @brief Detection Layer Margins */
+        uint32_t chirpProcessingMargin;
+        uint32_t frameProcessingMargin;
 
-    /*! @brief Number of TLVs in this message*/
-    uint16_t    numTLVs;
-    /*! @brief Header checksum */
-    uint16_t    checksum;
+        /*! @brief Localization Layer Timing */
+        uint32_t trackingProcessingTime;
+        uint32_t uartSendingTime;
 
-} MmwDemo_output_message_header;
+        /*! @brief Number of TLVs in this message*/
+        uint16_t numTLVs;
+        /*! @brief Header checksum */
+        uint16_t checksum;
+
+    }
+MmwDemo_output_message_header;
 
 /*!
  * @brief
@@ -231,9 +234,9 @@ typedef struct MmwDemo_output_message_pointCloud_t
     GTRACK_measurementPoint         point[1];
 } MmwDemo_output_message_pointCloud;
 
-/** TODO: 添加人体位置、姿态信息数据结构  Add man information about position/posture **/
+/* DONE:(finished) 添加人体位置、姿态信息数据结构  Add man information about position/posture */
 
-enum POSTURE_STATE {STACE, SITTING, LYING};
+enum POSTURE_STATE {UNKNOWN, STANCE, SITTING, LYING};
 /*!
  * @brief
  * 一个人体目标的各项参数
@@ -241,7 +244,7 @@ enum POSTURE_STATE {STACE, SITTING, LYING};
  * @details
  * 对于每个人，记录其ID/坐标/速度/身高/姿态
  */
-typedef struct MmwDemo_output_message_manPositionInfo3D_t
+typedef struct MmwDemo_output_message_manPosition3D_t
 {
     uint32_t tid; //目标对象ID
     float posX; //X坐标，单位 m
@@ -251,15 +254,15 @@ typedef struct MmwDemo_output_message_manPositionInfo3D_t
     float velY; //Y轴方向速度，单位 m / s 
     float velZ; //Z轴方向速度，单位 m / s 
     float manHeight; //身高，单位米
-    POSTURE_STATE manPosture; //姿态，枚举类型（站、坐、躺）
+    POSTURE_STATE manPosture; //姿态，枚举类型（未知、站、坐、躺）
 } MmwDemo_output_message_manPositionInfo3D;
 
-typedef struct MmwDemo_output_message_manPostionInfoList_t
+typedef struct MmwDemo_output_message_manPositionDescr_t
 {
     MmwDemo_output_message_tl header;
     //MmwDemo_output_message_point    point[1];
-    MmwDemo_output_message_manPositionInfo3D position[1];
-} MmwDemo_output_message_manPostionInfoList;
+    MmwDemo_output_message_manPosition3D_t position[1];
+} MmwDemo_output_message_manPositionDescr;
 
 /*!
  * @brief

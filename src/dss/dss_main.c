@@ -2425,6 +2425,7 @@ static void MmwDemo_dssInitTask(UArg arg0, UArg arg1)
      * Open & configure the drivers:
      *****************************************************************************/
 
+    /* TODO: 将参数传递到板上 */
     /* Setup the default logging UART Parameters */
     UART_Params_init(&uartParams);
     uartParams.writeDataMode = UART_DATA_BINARY;

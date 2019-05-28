@@ -238,6 +238,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         //points = (GTRACK_measurementPoint *)gMmwMssMCB.pointCloud->point; //needs fix, actually, this might work
         variances = NULL;
 
+        /* TODO: 将targetDescrHandle中的targetList传入聚类模块。在此添加计算身高部分 */
         gtrack_step(gMmwMssMCB.gtrackHandle, gMmwMssMCB.pointCloud->point, variances, mNum, targetDescr, &tNum, targetIndex->index, benchmarks);
 
         for(n=0; n<tNum; n++) {
