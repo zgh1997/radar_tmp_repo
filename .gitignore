@@ -1,0 +1,6 @@
+.vscode/
+docs/
+GUI_A_base_no_logic/
+GUI_B_gui_filteringLogic/
+Pre-compiled Binary/
+*.zip
