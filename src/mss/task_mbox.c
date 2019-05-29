@@ -282,23 +282,31 @@ void MmwDemo_mboxReadTask(UArg arg0, UArg arg1)
                     outputMessage.totalPacketLen = sizeof(MmwDemo_output_message_header);
                     outputMessage.numTLVs = 0;
                     outputMessage.checksum = 0;
-
+/*DONE: 点云数据停止传输 */
+                    /*
                     if(gMmwMssMCB.pointCloud->header.length) {
-                        /* Add pointCloud TLV length */
+                        // Add pointCloud TLV length 
                         outputMessage.totalPacketLen += gMmwMssMCB.pointCloud->header.length;
                         outputMessage.numTLVs += 1;
                     }
+
                     if(gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length) {
-                        /* Add targetList TLV length */
+                        // Add targetList TLV length
                         outputMessage.totalPacketLen += gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length;
                         outputMessage.numTLVs += 1;
                     }
                     if(gMmwMssMCB.targetDescrHandle->tIndex[sendDescr]->header.length) {
-                        /* Add targetIndex TLV length */
+                        // Add targetIndex TLV length 
                         outputMessage.totalPacketLen += gMmwMssMCB.targetDescrHandle->tIndex[sendDescr]->header.length;
                         outputMessage.numTLVs += 1;
                     }
-
+                    */
+/*FIXME: 数据准备添加自定义人体数据传输 */
+                    if(gMmwMssMCB.manPositionDescr->header.length) {
+                        // Add manPositionDescr TLV length
+                        outputMessage.totalPacketLen += gMmwMssMCB.manPositionDescr->header.length;
+                        outputMessage.numTLVs += 1;
+                    }
                     /* Calculate header checksum */
                     headerPtr = (uint16_t *)&outputMessage;
                     for(n=0, sum = 0; n < sizeof(MmwDemo_output_message_header)/sizeof(uint16_t); n++)
@@ -308,14 +316,18 @@ void MmwDemo_mboxReadTask(UArg arg0, UArg arg1)
                     /* Always send a packet header */
                     UART_write (gMmwMssMCB.loggingUartHandle, (uint8_t *)&outputMessage, sizeof(MmwDemo_output_message_header));
 
+
+/*
                     if(gMmwMssMCB.pointCloud->header.length) {
-                        /* If any points detected, send Point Cloud TLV */
+                        // If any points detected, send Point Cloud TLV
                         UART_write (gMmwMssMCB.loggingUartHandle, (uint8_t *)gMmwMssMCB.pointCloud, gMmwMssMCB.pointCloud->header.length);
                     }
+*/
 
-/*TODO: 添加自定义数据的串口通信 *******************/
+/*FIXME: 数据传输添加自定义数据的串口通信 *******************/
+/*                  // 停止以往相关数据传输
                     if(gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length) {
-                        /* If any targets tracked, send target List TLV  */
+                        // If any targets tracked, send target List TLV 
                         if (gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length%sizeof(MmwDemo_output_message_target) != sizeof(MmwDemo_output_message_tl)) {
                             System_printf("Header Length: %i\n", gMmwMssMCB.targetDescrHandle->tList[sendDescr]->header.length);
                             DebugP_assert(0);
@@ -324,12 +336,15 @@ void MmwDemo_mboxReadTask(UArg arg0, UArg arg1)
                     }
 
                     if(gMmwMssMCB.targetDescrHandle->tIndex[sendDescr]->header.length) {
-                        /* If exists, send target Index TLV  */
+                        // If exists, send target Index TLV 
                         UART_write (gMmwMssMCB.loggingUartHandle, (uint8_t *)gMmwMssMCB.targetDescrHandle->tIndex[sendDescr], gMmwMssMCB.targetDescrHandle->tIndex[sendDescr]->header.length);
                     }
 
                     //GPIO_write(SOC_XWR16XX_GPIO_2, 0U);
-
+*/
+                    if(gMmwMssMCB.manPositionDescr->header.length){
+                        UART_write(gMmwMssMCB.loggingUartHandle, (uint8_t *)gMmwMssMCB.manPositionDescr, gMmwMssMCB.manPositionDescr->header.length);
+                    }
 
                     gMmwMssMCB.mssDataPathObj.cycleLog.sendingToUARTTimeCurrInusec = ((float)(Cycleprofiler_getTimeStamp() - timeStart))/(float)R4F_CLOCK_MHZ;
                     if ((gMmwMssMCB.mssDataPathObj.cycleLog.sendingToUARTTimeCurrInusec > 0) && (gMmwMssMCB.mssDataPathObj.cycleLog.sendingToUARTTimeCurrInusec > gMmwMssMCB.mssDataPathObj.cycleLog.sendingToUARTTimeMaxInusec))

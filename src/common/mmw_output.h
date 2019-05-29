@@ -89,8 +89,8 @@ typedef enum MmwDemo_output_message_type_e
 
     MMWDEMO_OUTPUT_MSG_MAX,
 
-    /* DONE: 添加人位置信息类型 */
-    MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST;
+    /* DONE: 人体位置姿态信息 */
+    MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST
 } MmwDemo_output_message_type;
 
 /*!
@@ -234,34 +234,34 @@ typedef struct MmwDemo_output_message_pointCloud_t
     GTRACK_measurementPoint         point[1];
 } MmwDemo_output_message_pointCloud;
 
-/* DONE:(finished) 添加人体位置、姿态信息数据结构  Add man information about position/posture */
+/* DONE:(finished)人体位置姿态相关数据结构  Add man information about position/posture */
 
 enum POSTURE_STATE {UNKNOWN, STANCE, SITTING, LYING};
 /*!
  * @brief
- * 一个人体目标的各项参数
+ * 
  *
  * @details
- * 对于每个人，记录其ID/坐标/速度/身高/姿态
+ * 人体信息数据结构
  */
 typedef struct MmwDemo_output_message_manPosition3D_t
 {
-    uint32_t tid; //目标对象ID
-    float posX; //X坐标，单位 m
-    float posY; //Y坐标，单位 m
-    float posZ; //Z坐标，单位 m 
-    float velX; //X轴方向速度，单位 m / s 
-    float velY; //Y轴方向速度，单位 m / s 
-    float velZ; //Z轴方向速度，单位 m / s 
-    float manHeight; //身高，单位米
-    POSTURE_STATE manPosture; //姿态，枚举类型（未知、站、坐、躺）
-} MmwDemo_output_message_manPositionInfo3D;
+    uint32_t tid; //对象ID
+    float posX; //X坐标 m
+    float posY; //Y坐标 m
+    float posZ; //Z坐标 m
+    float velX; //X方向速度 m / s
+    float velY; //Y方向速度 m / s
+    float velZ; //Z方向速度 m / s
+    float manHeight; //人的高度 m
+    enum POSTURE_STATE manPosture; //人的姿态 枚举(未知、站、坐、躺)
+} MmwDemo_output_message_manPosition3D;
 
 typedef struct MmwDemo_output_message_manPositionDescr_t
 {
     MmwDemo_output_message_tl header;
     //MmwDemo_output_message_point    point[1];
-    MmwDemo_output_message_manPosition3D_t position[1];
+    MmwDemo_output_message_manPosition3D position[1];
 } MmwDemo_output_message_manPositionDescr;
 
 /*!
