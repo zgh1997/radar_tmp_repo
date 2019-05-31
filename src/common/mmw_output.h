@@ -234,9 +234,9 @@ typedef struct MmwDemo_output_message_pointCloud_t
     GTRACK_measurementPoint         point[1];
 } MmwDemo_output_message_pointCloud;
 
-/* DONE:(finished)人体位置姿态相关数据结构  Add man information about position/posture */
+/* DONE:人体位置姿态相关数据结构  Add man information about position/posture */
 
-enum POSTURE_STATE {UNKNOWN, STANCE, SITTING, LYING};
+enum POSTURE_STATE {UNKNOWN = 0, STANCE, SITTING, LYING};
 /*!
  * @brief
  * 
@@ -249,11 +249,11 @@ typedef struct MmwDemo_output_message_manPosition3D_t
     uint32_t tid; //对象ID
     float posX; //X坐标 m
     float posY; //Y坐标 m
-    float posZ; //Z坐标 m
+    float posZ; //Z坐标 m， 也表示当前人的高度
     float velX; //X方向速度 m / s
     float velY; //Y方向速度 m / s
     float velZ; //Z方向速度 m / s
-    float manHeight; //人的高度 m
+    float manMaxHeight; //人的身高 m
     enum POSTURE_STATE manPosture; //人的姿态 枚举(未知、站、坐、躺)
 } MmwDemo_output_message_manPosition3D;
 

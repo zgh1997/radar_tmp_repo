@@ -195,6 +195,8 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
 
     /* INFO: 计算部分添加人体位置列表 */
     MmwDemo_output_message_manPositionDescr* manPositionDescr;
+    static float maxHeights[30];
+    float heightRate = 1.0;
 
 	//GTRACK_measurementPoint *points;
     GTRACK_measurement_vector *variances;
@@ -202,7 +204,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
     uint32_t    *benchmarks;
     uint16_t    mNum;
     uint16_t    tNum;
-    uint16_t    n;
+    uint16_t    n, idx;
     _Bool currentDescr;
     //uint16_t debug;
 
@@ -262,20 +264,49 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         }
 
         /* TODO: 将targetDescrHandle中的targetList传入聚类模块。在此添加计算身高部分 */
+        memset((void*)maxHeights, 0, sizeof(float)*30);
+        
         manPositionDescr = gMmwMssMCB.manPositionDescr;
         for (n = 0; n < tNum; n++)
         {
-            manPositionDescr[n].position->tid = (uint32_t)targetDescr[n].uid;
+            manPositionDescr->position[n].tid = (uint32_t)targetDescr[n].uid;
 
-            manPositionDescr[n].position->posX = targetDescr[n].S[0];
-            manPositionDescr[n].position->posY = targetDescr[n].S[1];
-            manPositionDescr[n].position->posX = targetDescr[n].S[2];
-            manPositionDescr[n].position->velX = targetDescr[n].S[3];
-            manPositionDescr[n].position->velY = targetDescr[n].S[4];
-            manPositionDescr[n].position->velZ = targetDescr[n].S[5];
-            manPositionDescr[n].position->manHeight = 1.8;
-            manPositionDescr[n].position->manPosture = UNKNOWN;
+            manPositionDescr->position[n].posX = targetDescr[n].S[0];
+            manPositionDescr->position[n].posY = targetDescr[n].S[1];
+            manPositionDescr->position[n].posZ = 1.6 + targetDescr[n].S[2];
+            manPositionDescr->position[n].velX = targetDescr[n].S[3];
+            manPositionDescr->position[n].velY = targetDescr[n].S[4];
+            manPositionDescr->position[n].velZ = targetDescr[n].S[5];
+
+            // Update manMaxHeight on chip
+            if (manPositionDescr->position[n].posZ > 0)
+            {
+                if (manPositionDescr->position[n].posZ > maxHeights[manPositionDescr->position[n].tid]){
+                    maxHeights[manPositionDescr->position[n].tid] = manPositionDescr->position[n].posZ;
+
+                    if(maxHeights[manPositionDescr->position[n].tid] >= 2){
+                        maxHeights[manPositionDescr->position[n].tid] = 2.0;
+                    }
+                }
+            }
+            manPositionDescr->position[n].manMaxHeight = maxHeights[manPositionDescr->position[n].tid]; //TODO: 添加身高记录
+            
+            // Confirm posture by current height
+            heightRate = manPositionDescr->position[n].posZ / manPositionDescr->position[n].manMaxHeight;
+            if (heightRate >= 0.85)
+            {
+                manPositionDescr->position[n].manPosture = STANCE;
+            }
+            else if (heightRate >= 0.5){
+                manPositionDescr->position[n].manPosture = SITTING;
+            } else if(heightRate >= 0.1){
+                manPositionDescr->position[n].manPosture = LYING;
+            } else{
+                manPositionDescr->position[n].manPosture= UNKNOWN;
+            }
         }
+
+
 
 
         if(tNum > 0) {
@@ -296,8 +327,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec = ((float)(Cycleprofiler_getTimeStamp() - timeStart))/(float)R4F_CLOCK_MHZ;
         if ((gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec > 0) && (gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec > gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeMaxInusec))
             gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeMaxInusec = gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec;
-
-	}
+    }
 }
 
 /**
