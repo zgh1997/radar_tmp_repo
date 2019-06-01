@@ -139,6 +139,10 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
     GTRACK_measurementUnion mCurrent;
     GTRACK_measurementUnion mSum;
 
+	// TODO: 统计每个聚类中大速度数量,和小速度数量,用来用来消除手臂摆动
+	uint16_t maxDopplerNum[];
+	uint16_t minDopplerNum[];
+
     GTRACK_measurement_vector hs;
     GtrackUnitInstance *uinst;
 	uint16_t allocNum;
@@ -151,6 +155,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
     bool isSnrThresholdPassed;
     bool isAdjacent;
     GTRACK_cartesian_position pos;
+	// Number of input measurements(输入的待测量点数目)
 	for(n=0; n<num; n++) {
 		if(inst->bestIndex[n] == GTRACK_ID_POINT_NOT_ASSOCIATED) {
 			
@@ -164,7 +169,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 			    return;
 			}
 
-			inst->allocIndex[0] = n;
+			inst->allocIndex[0] = n; //什么意思?
 			allocNum = 1;
 			allocSNR = point[n].snr;
 
@@ -181,7 +186,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
                     if(fabsf(mCurrent.vector.doppler - mCenter.vector.doppler) < inst->params.allocationParams.maxVelThre) {
                         dist = gtrack_calcDistance(&mCenter.vector, &mCurrent.vector);
 						if(sqrtf(dist) < inst->params.allocationParams.maxDistanceThre) {
-								
+							//TODO:搜集每个聚类中大速度,小速度,用来消除手臂摆动
 							inst->allocIndex[allocNum] = k;
 
 							allocNum++;
@@ -193,6 +198,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 					}
 				}
 			}
+			// Minimum number of points in a set (一个聚类要求的,最小点数)
 			if( (allocNum > inst->params.allocationParams.pointsThre) &&
                 (fabsf(mCenter.vector.doppler) > inst->params.allocationParams.velocityThre) )
 			{
@@ -216,6 +222,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
                     isSnrThresholdPassed = allocSNR > inst->params.allocationParams.snrThre;
 
                 //check to ensure this new track is not too close to existing tracks
+				//在这进行近邻聚类判别,
                 gtrack_sph2cart(&mCenter.vector, &pos);
                 isAdjacent = false;
                 tElemActive = gtrack_listGetFirst(&inst->activeList);
@@ -223,10 +230,14 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
                 {
                 	uid = tElemActive->data;
                 	uinst = (GtrackUnitInstance *)inst->hTrack[uid];
-                	if (sqrtf(powf(uinst->S_hat[0] - pos.posX, 2.0f) + powf(uinst->S_hat[2] - pos.posZ, 2.0f)) < 0.5f) {
-                		isAdjacent = true;
-                		break;
+					// TODO: 0.5f,通过修改0.5这个阈值,调节两个聚类间的距离,来达到近邻判断
+                	if (sqrtf(powf(uinst->S_hat[0] - pos.posX, 2.0f) + powf(uinst->S_hat[2] - pos.posZ, 2.0f)) < 0.2f) {
+						if ((pos.posZ-uinst->S_hat[2]>0.3f)) {
+							isAdjacent = true;
+							break;
+						}
                 	}
+
                 	tElemActive = gtrack_listGetNext(tElemActive);
                 }
                 
@@ -247,6 +258,8 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 			}
 		}
 	}
+	// TODO: 将每个聚类,重新判断,如果该聚类上方突然出现(足以满足聚类点数的另一个聚类,通过判断,检测是不是手臂抬起,如果是手臂抬起,则忽略此聚类)
+
 }
 
 /**
