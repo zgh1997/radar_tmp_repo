@@ -109,6 +109,6 @@ typedef struct
     float accX;
     /**  @brief   Target horizontal acceleration, m/s2 */
     float accY;
-} GTRACK_state_vector_pos_vel_acc;
+} GTRACK_state_vector_pos_vel_acc; // 第一次定位
 #endif
 #endif
