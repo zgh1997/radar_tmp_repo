@@ -129,6 +129,7 @@ void gtrack_moduleAssociate(GtrackModuleInstance *inst, GTRACK_measurementPoint 
 *  @retval
 *      None
 */
+// inst: 每一个聚类对象(内含多个跟踪点)
 void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *point, uint16_t num)
 {
 	uint16_t n, k;
@@ -142,6 +143,9 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 	// TODO: 统计每个聚类中大速度数量,和小速度数量,用来用来消除手臂摆动
 	uint16_t maxDopplerNum[];
 	uint16_t minDopplerNum[];
+	uint16_t clusterNum; // 聚类数目,每次聚类完成后,自增1
+
+	uint16_t handCauseNum;//手臂抬起产生的点数
 
     GTRACK_measurement_vector hs;
     GtrackUnitInstance *uinst;
@@ -154,8 +158,9 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
     bool isBehind;
     bool isSnrThresholdPassed;
     bool isAdjacent;
-    GTRACK_cartesian_position pos;
-	// Number of input measurements(输入的待测量点数目)
+	bool isHandCause;//判断是不是手臂摆动引起的聚类
+    GTRACK_cartesian_position pos; //The structure defines a position in cartesian space : 笛卡尔空间坐标系的坐标值
+	//num: Number of input measurements(输入的待测量点数目)
 	for(n=0; n<num; n++) {
 		if(inst->bestIndex[n] == GTRACK_ID_POINT_NOT_ASSOCIATED) {
 			
@@ -187,9 +192,9 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
                         dist = gtrack_calcDistance(&mCenter.vector, &mCurrent.vector);
 						if(sqrtf(dist) < inst->params.allocationParams.maxDistanceThre) {
 							//TODO:搜集每个聚类中大速度,小速度,用来消除手臂摆动
-							inst->allocIndex[allocNum] = k;
+							inst->allocIndex[allocNum] = k; //该聚类中,每个点归属的,聚类索引id为k
 
-							allocNum++;
+							allocNum++; // 一个聚类中,点的个数
 							allocSNR +=point[k].snr;
                             // Update the centroid
                             gtrack_vectorAdd(GTRACK_MEASUREMENT_VECTOR_SIZE, mCurrent.array, mSum.array, mSum.array);
@@ -223,7 +228,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 
                 //check to ensure this new track is not too close to existing tracks
 				//在这进行近邻聚类判别,
-                gtrack_sph2cart(&mCenter.vector, &pos);
+                gtrack_sph2cart(&mCenter.vector, &pos); // 这个函数用于将一个向量从sherical转换成笛卡尔坐标
                 isAdjacent = false;
                 tElemActive = gtrack_listGetFirst(&inst->activeList);
                 while (tElemActive != 0)
@@ -240,7 +245,25 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 
                 	tElemActive = gtrack_listGetNext(tElemActive);
                 }
-                
+				// TODO: 将每个聚类,重新判断,如果该聚类上方突然出现(足以满足聚类点数的另一个聚类,通过判断,检测是不是手臂抬起,如果是手臂抬起,则忽略此聚类)
+				isHandCause = false;
+				tElemActive = gtrack_listGetFirst(&inst->activeList);
+				while (tEleActive != 0)
+				{
+					uid = tEleActive->data;
+					unist = (GtrackUnitInstance *)inst->hTrack[uid];
+					if ((pos.posZ > 1.6f) && (pos.accZ > 1.0f)) {
+						handCauseNum ++;
+						if (handCauseNum > 10) {
+							isHandCause = true;
+							break;
+						}
+					}
+					tElemActive = gtrack_listGetNext(tElemActive);
+				}
+				handCauseNum = 0;
+
+                // 一个聚类中的点,分散太远,就要拆开为多个聚类
                 if(isSnrThresholdPassed && !isAdjacent) {
 
                     /* Associate points with new uid  */
@@ -248,18 +271,17 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 					    inst->bestIndex[inst->allocIndex[k]] = (uint8_t)tElemFree->data;
 
 				    /* Allocate new tracker */
-                    inst->targetNumTotal ++;
-                    inst->targetNumCurrent ++;
+                    inst->targetNumTotal ++;  //Total number of tracked targets: 跟踪目标总数
+                    inst->targetNumCurrent ++; //Number of currently tracked Targets: 当前跟踪目标数量
 				    tElemFree = gtrack_listDequeue(&inst->freeList);
 
                     gtrack_unitStart(inst->hTrack[tElemFree->data], inst->heartBeat, inst->targetNumTotal, &mCenter.vector);
 				    gtrack_listEnqueue(&inst->activeList, tElemFree);
+					clusterNum++; //add 聚类数,自增1
                 }
 			}
 		}
 	}
-	// TODO: 将每个聚类,重新判断,如果该聚类上方突然出现(足以满足聚类点数的另一个聚类,通过判断,检测是不是手臂抬起,如果是手臂抬起,则忽略此聚类)
-
 }
 
 /**
