@@ -264,7 +264,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 				handCauseNum = 0;
 
                 // 一个聚类中的点,分散太远,就要拆开为多个聚类
-                if(isSnrThresholdPassed && !isAdjacent) {
+                if(isSnrThresholdPassed && !isAdjacent && !isHandCause) {
 
                     /* Associate points with new uid  */
 				    for(k=0; k<allocNum; k++)
