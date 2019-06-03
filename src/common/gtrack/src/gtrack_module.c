@@ -129,12 +129,25 @@ void gtrack_moduleAssociate(GtrackModuleInstance *inst, GTRACK_measurementPoint 
 *  @retval
 *      None
 */
+/* TODO: gtrack 聚类修改 */
 void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *point, uint16_t num)
 {
 	uint16_t n, k;
+	/*INFO:gtrack 变量声明 */
+	uint16_t i, j, idx;
+	uint8_t m_index[num]; //用来存储每个点的clusterId, 复制inst->bestIndex,避免clusterId 与 TID混淆
+	uint16_t clusterNum;  //聚类中心数目
 
-//	float un[3], uk[3];
-//	float unSum[3];
+	GTRACK_measurement_vector clusterCenter[num]; //聚类中心信息
+	uint16_t clusterPointCnt[num]; //每个聚类包含的点的数目
+
+	// 初始化聚类信息
+	memset(clusterPointCnt, 0, sizeof(uint16_t)*num);
+	memset(m_index, 0, num*sizeof(uint8_t));
+
+	// 使用自定义数据结构替换
+	//	float un[3], uk[3];
+	//	float unSum[3];
     GTRACK_measurementUnion mCenter;
     GTRACK_measurementUnion mCurrent;
     GTRACK_measurementUnion mSum;
@@ -151,20 +164,20 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
     bool isSnrThresholdPassed;
     bool isAdjacent;
     GTRACK_cartesian_position pos;
+
+	// 初次聚类执行
 	for(n=0; n<num; n++) {
-		if(inst->bestIndex[n] == GTRACK_ID_POINT_NOT_ASSOCIATED) {
+		if(inst->bestIndex[n] == GTRACK_ID_POINT_NOT_ASSOCIATED
+		&& m_index[n] == 0) {
 			
+			// INFO: 目标数目到上限，直接终止聚类
 			tElemFree = gtrack_listGetFirst(&inst->freeList);
 			if(tElemFree == 0) {
-
-#ifdef GTRACK_LOG_ENABLED
-			    if(inst->verbose & VERBOSE_WARNING_INFO)
-			        gtrack_log(GTRACK_VERBOSE_WARNING, "Maximum number of tracks reached!");
-#endif
 			    return;
 			}
 
-			inst->allocIndex[0] = n;
+// 存储初始中心点n的信息mCenter
+			inst->allocIndex[0] = n; // allocIndex中存储已聚类的点的坐标
 			allocNum = 1;
 			allocSNR = point[n].snr;
 
@@ -172,7 +185,8 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
             mSum.vector = point[n].vector;
 
 			for(k=n+1; k<num; k++) {
-				if(inst->bestIndex[k] == GTRACK_ID_POINT_NOT_ASSOCIATED) {
+				if(inst->bestIndex[k] == GTRACK_ID_POINT_NOT_ASSOCIATED
+				&& m_index[k] == 0) {
 
                     mCurrent.vector = point[k].vector;
 
@@ -193,6 +207,68 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 					}
 				}
 			}
+
+
+			if(clusterNum >= num-2) break;//聚类达到上限终止条件
+			if ((allocNum > inst->params.allocationParams.pointsThre) &&
+				(fabsf(mCenter.vector.doppler) > inst->params.allocationParams.velocityThre))
+			{
+				isBehind = false;
+				
+				// TODO: gtrack将中心点坐标存入clusterCenter
+				while (tElemActive != 0)//INFO: gtrack 当前聚类与之前所有聚类进行遮挡对比
+				{
+					uid = tElemActive->data;
+					gtrack_unitGetH(inst->hTrack[uid], (float *)&hs);
+
+					if (gtrack_isPointBehindTarget(&mCenter.vector, &hs))//INFO: gtrack 角度差2度，距离在后面
+					{
+						isBehind = true;
+						break;
+					}
+					tElemActive = gtrack_listGetNext(tElemActive);
+				}
+
+				if (isBehind)
+					isSnrThresholdPassed = allocSNR > inst->params.allocationParams.snrThreObscured;
+				else
+					isSnrThresholdPassed = allocSNR > inst->params.allocationParams.snrThre;
+
+				//check to ensure this new track is not too close to existing tracks
+				gtrack_sph2cart(&mCenter.vector, &pos);
+				isAdjacent = false;
+				tElemActive = gtrack_listGetFirst(&inst->activeList);
+				while (tElemActive != 0) //INFO: gtrack 当前聚类与之前所有聚类进行遮挡对比
+				{
+					uid = tElemActive->data;
+					uinst = (GtrackUnitInstance *)inst->hTrack[uid];
+					if (sqrtf(powf(uinst->S_hat[0] - pos.posX, 2.0f) + powf(uinst->S_hat[2] - pos.posZ, 2.0f)) < 0.5f)//INFO:gtrack距离小于0.5米
+					{
+						isAdjacent = true;
+						break;
+					}
+					tElemActive = gtrack_listGetNext(tElemActive);
+				}
+
+				if (isSnrThresholdPassed && !isAdjacent)
+				{
+
+					// Associate points with new uid
+					for (k = 0; k < allocNum; k++)
+						inst->bestIndex[inst->allocIndex[k]] = (uint8_t)tElemFree->data;
+
+					// Allocate new tracker
+					inst->targetNumTotal++;
+					inst->targetNumCurrent++;
+					tElemFree = gtrack_listDequeue(&inst->freeList);
+
+					gtrack_unitStart(inst->hTrack[tElemFree->data], inst->heartBeat, inst->targetNumTotal, &mCenter.vector);
+					gtrack_listEnqueue(&inst->activeList, tElemFree);
+				}
+			}
+
+			/* //TODO: gtrack ，最终判断聚类是否存入列表 
+			//存入的中心点坐标中
 			if( (allocNum > inst->params.allocationParams.pointsThre) &&
                 (fabsf(mCenter.vector.doppler) > inst->params.allocationParams.velocityThre) )
 			{
@@ -232,11 +308,11 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
                 
                 if(isSnrThresholdPassed && !isAdjacent) {
 
-                    /* Associate points with new uid  */
+                    // Associate points with new uid 
 				    for(k=0; k<allocNum; k++)
 					    inst->bestIndex[inst->allocIndex[k]] = (uint8_t)tElemFree->data;
 
-				    /* Allocate new tracker */
+				    // Allocate new tracker 
                     inst->targetNumTotal ++;
                     inst->targetNumCurrent ++;
 				    tElemFree = gtrack_listDequeue(&inst->freeList);
@@ -245,6 +321,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 				    gtrack_listEnqueue(&inst->activeList, tElemFree);
                 }
 			}
+		*/
 		}
 	}
 }

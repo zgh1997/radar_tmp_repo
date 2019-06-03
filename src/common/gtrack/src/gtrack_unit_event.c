@@ -139,8 +139,8 @@ void gtrack_unitEvent(void *handle, uint16_t num)
 				/* Threshold can not be more than lifetime of the target */
 				if(thre > inst->heartBeatCount)
 					thre = (uint16_t)inst->heartBeatCount;
-
-				if(inst->active2freeCount > thre) {
+/* FIXME: gtrack静止目标不消除 */
+				if(!inst->isTargetStatic && inst->active2freeCount > thre) {
 					inst->state = TRACK_STATE_FREE;
 #ifdef GTRACK_LOG_ENABLED
 					if(inst->verbose & VERBOSE_STATE_INFO)
