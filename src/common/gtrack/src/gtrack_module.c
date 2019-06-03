@@ -141,8 +141,8 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
     GTRACK_measurementUnion mSum;
 
 	// TODO: 统计每个聚类中大速度数量,和小速度数量,用来用来消除手臂摆动
-	uint16_t maxDopplerNum[];
-	uint16_t minDopplerNum[];
+	// uint16_t maxDopplerNum[];
+	// uint16_t minDopplerNum[];
 	uint16_t clusterNum; // 聚类数目,每次聚类完成后,自增1
 
 	uint16_t handCauseNum;//手臂抬起产生的点数
@@ -246,12 +246,13 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
                 	tElemActive = gtrack_listGetNext(tElemActive);
                 }
 				// TODO: 将每个聚类,重新判断,如果该聚类上方突然出现(足以满足聚类点数的另一个聚类,通过判断,检测是不是手臂抬起,如果是手臂抬起,则忽略此聚类)
+				gtrack_sph2cart(&mCenter.vector, &pos); // 这个函数用于将一个向量从sherical转换成笛卡尔坐标
 				isHandCause = false;
 				tElemActive = gtrack_listGetFirst(&inst->activeList);
-				while (tEleActive != 0)
+				while (tElemActive != 0)
 				{
-					uid = tEleActive->data;
-					unist = (GtrackUnitInstance *)inst->hTrack[uid];
+					uid = tElemActive->data;
+					uinst = (GtrackUnitInstance *)inst->hTrack[uid];
 					if ((pos.posZ > 1.6f) && (pos.accZ > 1.0f)) {
 						handCauseNum ++;
 						if (handCauseNum > 10) {
