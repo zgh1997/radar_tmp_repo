@@ -125,3 +125,4 @@ typedef struct
     float accZ;
 } GTRACK_state_vector_pos_vel_acc;//第二次定位
 #endif
+#endif
