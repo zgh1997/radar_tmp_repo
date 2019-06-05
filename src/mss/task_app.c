@@ -193,10 +193,6 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
     MmwDemo_output_message_targetIndex *targetIndex;
     GTRACK_targetDesc  targetDescr[20];
 
-    /* INFO: 计算部分添加人体位置列表 */
-    MmwDemo_output_message_manPositionDescr* manPositionDescr;
-    static float maxHeights[30];
-    float heightRate = 1.0;
 
 	//GTRACK_measurementPoint *points;
     GTRACK_measurement_vector *variances;
@@ -204,7 +200,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
     uint32_t    *benchmarks;
     uint16_t    mNum;
     uint16_t    tNum;
-    uint16_t    n, idx;
+    uint16_t    n;
     _Bool currentDescr;
     //uint16_t debug;
 
@@ -262,61 +258,11 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
             targetList->target[n].g = targetDescr[n].G;
 #endif
         }
-
-        /* TODO: 将targetDescrHandle中的targetList传入聚类模块。在此添加计算身高部分 */
-        memset((void*)maxHeights, 0, sizeof(float)*30);
-        
-        manPositionDescr = gMmwMssMCB.manPositionDescr;
-        for (n = 0; n < tNum; n++)
-        {
-            manPositionDescr->position[n].tid = (uint32_t)targetDescr[n].uid;
-
-            manPositionDescr->position[n].posX = targetDescr[n].S[0];
-            manPositionDescr->position[n].posY = targetDescr[n].S[1];
-            manPositionDescr->position[n].posZ = 1.6 + targetDescr[n].S[2];
-            manPositionDescr->position[n].velX = targetDescr[n].S[3];
-            manPositionDescr->position[n].velY = targetDescr[n].S[4];
-            manPositionDescr->position[n].velZ = targetDescr[n].S[5];
-
-            // Update manMaxHeight on chip
-            if (manPositionDescr->position[n].posZ > 0)
-            {
-                if (manPositionDescr->position[n].posZ > maxHeights[manPositionDescr->position[n].tid]){
-                    maxHeights[manPositionDescr->position[n].tid] = manPositionDescr->position[n].posZ;
-
-                    if(maxHeights[manPositionDescr->position[n].tid] >= 2){
-                        maxHeights[manPositionDescr->position[n].tid] = 2.0;
-                    }
-                }
-            }
-            manPositionDescr->position[n].manMaxHeight = maxHeights[manPositionDescr->position[n].tid]; //TODO: 添加身高记录
-            
-            // Confirm posture by current height
-            heightRate = manPositionDescr->position[n].posZ / manPositionDescr->position[n].manMaxHeight;
-            if (heightRate >= 0.85)
-            {
-                manPositionDescr->position[n].manPosture = STANCE;
-            }
-            else if (heightRate >= 0.5){
-                manPositionDescr->position[n].manPosture = SITTING;
-            } else if(heightRate >= 0.1){
-                manPositionDescr->position[n].manPosture = LYING;
-            } else{
-                manPositionDescr->position[n].manPosture= UNKNOWN;
-            }
-        }
-
-
-
-
         if(tNum > 0) {
             targetList->header.length = sizeof(MmwDemo_output_message_tl) + tNum*sizeof(MmwDemo_output_message_target);
-            manPositionDescr->header.length = sizeof(MmwDemo_output_message_tl) + tNum * sizeof(MmwDemo_output_message_manPosition3D);
         }
-        else{
+        else
             targetList->header.length = 0;
-            manPositionDescr->header.length = 0;
-        }
 
         if((mNum > 0) && (tNum > 0))
             /* Target Indices exist only when we have both points AND targets */
@@ -327,7 +273,8 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec = ((float)(Cycleprofiler_getTimeStamp() - timeStart))/(float)R4F_CLOCK_MHZ;
         if ((gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec > 0) && (gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec > gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeMaxInusec))
             gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeMaxInusec = gMmwMssMCB.mssDataPathObj.cycleLog.trackingTimeCurrInusec;
-    }
+
+	}
 }
 
 /**
@@ -354,7 +301,6 @@ int32_t MmwDemo_CLITrackingCfg (int32_t argc, char* argv[])
     uint32_t                pointCloudSize;
     uint32_t                targetListSize;
     uint32_t                targetIndexSize;
-    uint32_t                manPositionListSize;/*INFO:添加人体位置信息列表长度*/
     int32_t                err;
 
     //Memory_Stats            startMemoryStats;
@@ -449,19 +395,12 @@ int32_t MmwDemo_CLITrackingCfg (int32_t argc, char* argv[])
     if(gMmwMssMCB.cfg.trackingCfg.config.maxNumTracks != 0) {
         targetListSize = sizeof(MmwDemo_output_message_tl) + gMmwMssMCB.cfg.trackingCfg.config.maxNumTracks*sizeof(GTRACK_targetDesc);
         targetIndexSize = sizeof(MmwDemo_output_message_tl) + gMmwMssMCB.cfg.trackingCfg.config.maxNumPoints*sizeof(uint8_t);
-        manPositionListSize = sizeof(MmwDemo_output_message_tl) + gMmwMssMCB.cfg.trackingCfg.config.maxNumTracks*sizeof(MmwDemo_output_message_manPosition3D);
         if(gMmwMssMCB.targetDescrHandle != NULL) {
             /* Free Target List Arrays */
-            if(gMmwMssMCB.targetDescrHandle->tList[0] != NULL){
+            if(gMmwMssMCB.targetDescrHandle->tList[0] != NULL)
                 MemoryP_ctrlFree(gMmwMssMCB.targetDescrHandle->tList[0], targetListSize);
-            }
-            if(gMmwMssMCB.targetDescrHandle->tList[1] != NULL){
+            if(gMmwMssMCB.targetDescrHandle->tList[1] != NULL)
                 MemoryP_ctrlFree(gMmwMssMCB.targetDescrHandle->tList[1], targetListSize);
-            }
-            /* FIXME: Free manPosition List Arrays */
-            if(gMmwMssMCB.manPositionDescr != NULL){
-                MemoryP_ctrlFree(gMmwMssMCB.manPositionDescr, manPositionListSize);
-            }
 
             /* Free Target Index Arrays */
             if(gMmwMssMCB.targetDescrHandle->tIndex[0] != NULL)
@@ -525,10 +464,6 @@ int32_t MmwDemo_CLITrackingCfg (int32_t argc, char* argv[])
     targetIndexSize = sizeof(MmwDemo_output_message_tl) + config.maxNumPoints*sizeof(uint8_t);
     gMmwMssMCB.targetDescrHandle->tIndex[0] = (MmwDemo_output_message_targetIndex *)MemoryP_ctrlAlloc(targetIndexSize, sizeof(float));
     gMmwMssMCB.targetDescrHandle->tIndex[1] = (MmwDemo_output_message_targetIndex *)MemoryP_ctrlAlloc(targetIndexSize, sizeof(float));
-    /* FIXME: 为人体信息列表开辟空间 */
-    manPositionListSize = sizeof(MmwDemo_output_message_tl) + config.maxNumTracks * sizeof(MmwDemo_output_message_manPosition3D);
-    gMmwMssMCB.manPositionDescr = (MmwDemo_output_message_manPositionDescr*)MemoryP_ctrlAlloc(manPositionListSize, sizeof(float));
-    gMmwMssMCB.manPositionDescr->header.type = MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST;
 
     if((gMmwMssMCB.targetDescrHandle->tIndex[0] == NULL) || (gMmwMssMCB.targetDescrHandle->tIndex[1] == NULL)){
         System_printf("Error: Unable to allocate %d bytes for targetIndices\n", targetIndexSize*2);

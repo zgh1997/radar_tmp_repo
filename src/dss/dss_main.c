@@ -125,27 +125,6 @@ typedef struct MmwDemo_HSRAM_t_ {
 MmwDemo_HSRAM_t gHSRAM;
 
 
-/********************** Add vital signs ***************************************/
-/* Data memory for CQ:Rx Saturation - valid for 16bit CQ data format.
-  rlRfRxSaturationCqData_t is not used here, because the CQ data length
-  per chirp varies with number of slices.
- */
-uint8_t gCQRxSatMonMemory[SYS_COMMON_CQ_MAX_CHIRP_THRESHOLD * (RL_NUM_MON_SLICES_MAX + 1)];
-
-/* Data memory for CQ:signal & image band monitor - valid for 16bit CQ data format.
-  rlRfSigImgPowerCqData_t is not used here, because the CQ data length
-  per chirp varies with number of slices.
- */
-uint16_t gCQRxSigImgMemory[SYS_COMMON_CQ_MAX_CHIRP_THRESHOLD * (RL_NUM_MON_SLICES_MAX + 1)];
-
-#pragma DATA_SECTION(gCQRxSatMonMemory, ".l2data");
-#pragma DATA_ALIGN(gCQRxSatMonMemory, 4);
-
-#pragma DATA_SECTION(gCQRxSigImgMemory, ".l2data");
-#pragma DATA_ALIGN(gCQRxSigImgMemory, 4);
-/******************** End Add vital signs ***********************************/
-
-
 /*! @brief Flag to enable/disable two peak detection in azimuth for same range and velocity */
 #define MMWDEMO_AZIMUTH_TWO_PEAK_DETECTION_ENABLE 1
 
@@ -1383,8 +1362,7 @@ int32_t MmwDemo_dssDataPathInit(void)
         MmwDemo_dataPathObjInit(obj,
                                 context,
                                 &gMmwDssMCB.cliCfg[subFrameIndx],
-                                &gMmwDssMCB.cliCommonCfg,
-                                &gMmwDssMCB.cfg);
+                                &gMmwDssMCB.cliCommonCfg);
         MmwDemo_dataPathInit1Dstate(obj);
     }
 
@@ -2090,7 +2068,6 @@ static int32_t MmwDemo_dssDataPathProcessEvents(UInt event)
                 gCycleLog.interFrameProcessingTime = 0;
                 gCycleLog.interFrameWaitTime = 0;
 
-                /*********************DIFF: MmwDemo_measurementResultOutput*********************/
                 /* Sending range bias and Rx channel phase offset measurements to MSS and from there to CLI */
                 if(dataPathObj->cliCommonCfg->measureRxChanCfg.enabled)
                 {
@@ -2425,7 +2402,6 @@ static void MmwDemo_dssInitTask(UArg arg0, UArg arg1)
      * Open & configure the drivers:
      *****************************************************************************/
 
-    /* TODO: 将参数传递到板上 */
     /* Setup the default logging UART Parameters */
     UART_Params_init(&uartParams);
     uartParams.writeDataMode = UART_DATA_BINARY;
@@ -2434,7 +2410,6 @@ static void MmwDemo_dssInitTask(UArg arg0, UArg arg1)
     uartParams.baudRate        = gMmwDssMCB.cfg.loggingBaudRate;
     uartParams.isPinMuxDone    = 1;
 
-    /********************** DIFF: MCBInit()****************************************/
     /* Open the Logging UART Instance: */
     gMmwDssMCB.loggingUartHandle = UART_open(0, &uartParams);
     if (gMmwDssMCB.loggingUartHandle == NULL)

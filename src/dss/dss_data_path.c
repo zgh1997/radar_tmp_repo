@@ -2857,10 +2857,6 @@ void MmwDemo_interFrameProcessing(MmwDemo_DSS_DataPathObj *obj)
 		    }
         }
 
-        /**************************************** NOTE: CFAR **************************************/
-        /**
-         * NOTE: 根据计算出的各个cfar值，并根据此值确定检测到的物体的数目
-         */
         /* CFAR-detecton on current range line: search doppler peak among numDopplerBins samples */
         numDetObjPerCfar = mmwavelib_cfarCadBwrap(
                 obj->sumAbs,
@@ -3416,16 +3412,15 @@ void MmwDemo_interFrameProcessing(MmwDemo_DSS_DataPathObj *obj)
         EDMA_setDestinationAddress(context->edmaHandle[EDMA_INSTANCE_A], channelId,
             (uint32_t)obj->radarCube + (uint32_t)obj->chirpCount * chirpBytes);
     }
-    /*************************DIFF: ************************************/
+
 	numPingOrPongSamples = obj->numRangeBins * obj->numRxAntennas;
 	
 	EDMA_setDestinationAddress(context->edmaHandle[EDMA_INSTANCE_A], channelId,
 	(uint32_t)(&obj->radarCube[numPingOrPongSamples * (obj->numDopplerBins*obj->txAntennaCount + obj->dopplerBinCount)]));
 	EDMA_setSourceAddress(context->edmaHandle[EDMA_INSTANCE_A], channelId,
 	(uint32_t)(SOC_translateAddress((uint32_t)(&obj->fftOut1D[numPingOrPongSamples*isPong(obj->chirpCount)]),SOC_TranslateAddr_Dir_TO_EDMA,NULL)));
-    /*************************DIFF END ************************************/
 
-    EDMA_startDmaTransfer(context->edmaHandle[EDMA_INSTANCE_A], channelId);
+	EDMA_startDmaTransfer(context->edmaHandle[EDMA_INSTANCE_A], channelId);
 
     obj->chirpCount++;
     obj->txAntennaCount++;
@@ -3567,14 +3562,13 @@ void MmwDemo_edmaTransferControllerErrorCallbackFxn(EDMA_Handle handle,
 void MmwDemo_dataPathObjInit(MmwDemo_DSS_DataPathObj *obj,
                              MmwDemo_DSS_dataPathContext_t *context,
                              MmwDemo_CliCfg_t *cliCfg,
-                             MmwDemo_CliCommonCfg_t *cliCommonCfg,
-                             MmwDemo_Cfg *cfg)
+                             MmwDemo_CliCommonCfg_t *cliCommonCfg)
 {
     memset((void *)obj, 0, sizeof(MmwDemo_DSS_DataPathObj));
     obj->context = context;
     obj->cliCfg = cliCfg;
     obj->cliCommonCfg = cliCommonCfg;
-    obj->cfg = cfg;
+
 }
 
 void MmwDemo_dataPathInit1Dstate(MmwDemo_DSS_DataPathObj *obj)

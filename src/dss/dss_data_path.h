@@ -305,10 +305,6 @@ typedef struct outputToARM_t_ {
  */
 typedef struct MmwDemo_DSS_DataPathObj_t
 {
-    /************ MODIFIED: Add cfg **************/
-    /*! @brief Pointer to mmw demo configuration */
-    MmwDemo_Cfg *cfg;
-
     /*! @brief Pointer to common context across data path objects */
     MmwDemo_DSS_dataPathContext_t *context;
     
@@ -453,7 +449,6 @@ typedef struct MmwDemo_DSS_DataPathObj_t
     /*! @brief Detected Doppler lines */
 	MmwDemo_1D_DopplerLines_t detDopplerLines;
 
-    /*********** DIFF: detObj2D **************/
     /*! @brief Detected objects after second pass in Range direction */
     MmwDemo_detectedObj *detObj2D;
 
@@ -482,10 +477,6 @@ typedef struct MmwDemo_DSS_DataPathObj_t
     /*! @brief ADCBUF will generate chirp interrupt event every this many chirps */
     uint16_t numChirpsPerChirpEvent;
 
-    /******** MODIFIED: Add numBytePerSample *****************/
-    /*! @brief number of bytes per ADC sample in ADC buffer  */
-    uint8_t numBytePerSample;
-
     /*! @brief Rx channel gain/phase offset compensation coefficients */
     MmwDemo_compRxChannelBiasCfg_t compRxChanCfg;
 
@@ -496,126 +487,6 @@ typedef struct MmwDemo_DSS_DataPathObj_t
 //    MmwDemo_detOutputHdr outputHdr;
     /*! @brief   Data struction for output to ARM */
         outputToARM_t outputDataToArm;
-
-    /************* MODIFIDE: Add vital-signs related data structure ***/
-        /*! @brief subframe index for this obj */
-        uint8_t subFrameIndx;
-
-        /*! @brief Rx channel Chirp Quality config & data */
-        MmwDemo_DSS_DataPathCQ datapathCQ;
-
-        /*Vital Signs Params*/
-
-        uint16_t rxAntennaProcess; // Receiver Channel to process
-
-        // Range-FFT params
-        cmplx16ReIm_t *pRangeProfileCplx; // The Complex Range Profile extracted from the Radar Cube
-        uint32_t maxIndexRangeBin;        // Index of the range bin with the Max Value
-        float maxValueRangeBin;           // Magnitude of the range bin with the Max Value
-        float rangeBinSize_meter;         // Size of the Range-bin in Meters
-        float chirpDuration_us;           // Chirp Duration in microseconds
-        float chirpBandwidth_kHz;         // Chirp Bandwidth in MHz
-        float rangeMaximum;               // Maximum Unambiguous Range
-        float scaleFactor_PhaseToDisp;    // Scaling factor to convert phase values to displacement (mm)
-        uint32_t framePeriodicity_ms;     // Frame Periodicity in ms
-
-        uint16_t numRangeBinProcessed; // Number of Range-bins Processed (determined from the StartRange and EndRange in the configuration file)
-        uint16_t rangeBinStartIndex;   // Range-bin Start Index
-        uint16_t rangeBinEndIndex;     // Range-bin End Index
-        float unwrapPhasePeak;         // Unwrapped phase value corresponding to the object range-bin
-
-        float *pDataOutTemp;                            // Temporary Buffer
-        float *pVitalSigns_Breath_CircularBuffer;       // Circular Buffer for Breathing Waveform
-        float *pVitalSigns_Heart_CircularBuffer;        // Circular Buffer for Cardiac Waveform
-        float *pMotionCircularBuffer;                   // Circular Buffer for Segment under Test for Motion Corruption
-        float *pVitalSigns_Breath_AbsSpectrum;          // FFT of the Breathing Waveform
-        float *pVitalSigns_Heart_AbsSpectrum;           // FFT of the Cardiac Waveform
-        cmplx32ReIm_t *pVitalSigns_SpectrumCplx;        // Complex FFT output storage
-        cmplx32ReIm_t *pVitalSignsBuffer_Cplx;          // Waveform values in complex format
-        cmplx32ReIm_t *pVitalSignsSpectrumTwiddle32x32; // Twiddle factors for the FFT
-
-        uint16_t circularBufferSizeBreath;      // Breathing Waveform Buffer Size
-        uint16_t circularBufferSizeHeart;       // Cardiac   Waveform Buffer Size
-        uint16_t breathingWfm_Spectrum_FftSize; // FFT size for Breathing Waveform
-        uint16_t heartWfm_Spectrum_FftSize;     // FFT size for Cardiac Waveform
-
-        /*! @brief Doppler Window Coefficients */
-        float *pDopplerWindow; // Dopple window Coefficients
-        float pFilterCoefs[FIR_FILTER_SIZE];
-
-        // Motion Detection
-        float motionDetected;               // Flag to indicate that the data segment is corrupted by Motion
-        float motionDetection_Thresh;       // Threshold over which a segment is classified as motion corrupted
-        uint16_t motionDetection_BlockSize; // Size of the data segment checked for motion corruption
-
-        // Clutter Removal Parameters
-        float *pTempReal_Prev;
-        float *pTempImag_Prev;
-        float *pRangeProfileClutterRemoved;
-
-        // IIR Filtering
-        float *pFilterCoefsBreath;                                // IIR-Filter Coefficients for Breathing
-        float *pScaleValsBreath;                                  // Scale values for IIR-Cascade Filter
-        float *pFilterCoefsHeart_4Hz;                             // IIR-Filter Coefficients for Cardiac Waveform
-        float *pScaleValsHeart_4Hz;                               // Scale values for IIR-Cascade Filter
-        float pDelayHeart[HEART_WFM_IIR_FILTER_TAPS_LENGTH];      // IIR-Filter delay lines
-        float pDelayBreath[BREATHING_WFM_IIR_FILTER_TAPS_LENGTH]; // IIR-Filter delay lines
-
-        float breath_startFreq_Hz; // Lower cut-off Frequency for the Breathing band-pass filter
-        float breath_endFreq_Hz;   // Higher cut-off Frequency for the Breathing band-pass filter
-        float heart_startFreq_Hz;  // Lower cut-off Frequency  for the Heart beat band-pass filter
-        float heart_endFreq_Hz;    // Higher cut-off Frequency  for the Breathing band-pass filter
-        float samplingFreq_Hz;     // Slow-Axis sampling rate. Will be equivalent to the Frame rate
-        float freqIncrement_Hz;    // Frequency Step Size
-
-        // Auto-Correlation
-        float *pXcorr;         // Auto-correlation Output
-        uint16_t xCorr_minLag; // Minimum Lag
-        uint16_t xCorr_maxLag; // Maximum Lag
-        uint16_t xCorr_Breath_minLag;
-        uint16_t xCorr_Breath_maxLag;
-
-        // Confidence Metric
-        uint16_t confMetric_spectrumHeart_IndexStart;
-        uint16_t confMetric_spectrumHeart_IndexEnd;
-        uint16_t confMetric_spectrumBreath_IndexStart;
-        uint16_t confMetric_spectrumBreath_IndexEnd;
-        uint16_t confMetric_spectrumHeart_IndexStart_1p6Hz;
-        uint16_t confMetric_spectrumHeart_IndexStart_4Hz;
-        uint16_t confMetric_numIndexAroundPeak_heart;
-        uint16_t confMetric_numIndexAroundPeak_breath;
-
-        uint16_t pPeakIndex[MAX_ALLOWED_PEAKS_SPECTRUM];       // Indices of the Peaks in the Cardiac/Breathing spectrum
-        uint16_t pPeakIndexSorted[MAX_ALLOWED_PEAKS_SPECTRUM]; // Sorted Indices of the Peaks in the Cardiac/Breathing spectrum
-        float pPeakValues[MAX_ALLOWED_PEAKS_SPECTRUM];         // Values of the Peaks in the Cardiac/Breathing spectrum
-        uint16_t pPeakSortTempIndex[MEDIAN_WINDOW_LENGTH];     // For Median Sorting
-
-        uint16_t peakDistanceBreath_Min;
-        uint16_t peakDistanceBreath_Max;
-        uint16_t peakDistanceHeart_Min;
-        uint16_t peakDistanceHeart_Max;
-
-        uint16_t heart_startFreq_Index, heart_endFreq_Index;   // Index corresponding to the lower and higher cut-off frequencies for the band-pass filter
-        uint16_t breath_startFreq_Index, breath_endFreq_Index; //Index corresponding to the lower and higher cut-off frequencies for the band-pass filter
-        uint16_t heart_startFreq_Index_1p6Hz;
-        uint16_t heart_endFreq_Index_4Hz;
-
-        float gainControl_Thresh;       // Threshold for automatic Gain Control Module
-        uint16_t gainControl_BlockSize; // Gain Control Block Size
-        float noiseImpulse_Thresh;
-
-        float pBufferHeartRate[MEDIAN_WINDOW_LENGTH];     // Maintains a history of the Previous "MEDIAN_WINDOW_LENGTH" heart rate measurements
-        float pBufferBreathingRate[MEDIAN_WINDOW_LENGTH]; // Maintains a history of the Previous "MEDIAN_WINDOW_LENGTH" heart rate measurements
-        float pBufferHeartRate_4Hz[MEDIAN_WINDOW_LENGTH];
-
-        float alpha_breathing; // Alpha factor for exponential smoothing of the breathing Wfm
-        float alpha_heart;     // Alpha factor for exponential smoothing of the heart Wfm
-
-        // Scale factor for breathing and Heart Wfm
-        float scale_breathingWfm;
-        float scale_heartWfm;
-
-        VitalSignsDemo_OutputStats VitalSigns_Output; // VitalSigns Output Structure
 
 } MmwDemo_DSS_DataPathObj;
 
@@ -633,8 +504,7 @@ typedef struct MmwDemo_DSS_DataPathObj_t
 void MmwDemo_dataPathObjInit(MmwDemo_DSS_DataPathObj *obj,
                              MmwDemo_DSS_dataPathContext_t *context,
                              MmwDemo_CliCfg_t *cliCfg,
-                             MmwDemo_CliCommonCfg_t *cliCommonCfg,
-                             MmwDemo_Cfg *cfg);
+                             MmwDemo_CliCommonCfg_t *cliCommonCfg);
 
 /**
  *  @b Description

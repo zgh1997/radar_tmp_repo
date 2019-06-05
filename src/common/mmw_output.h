@@ -89,7 +89,7 @@ typedef enum MmwDemo_output_message_type_e
 
     MMWDEMO_OUTPUT_MSG_MAX,
 
-    /* DONE: äººä½“ä½ç½®å§¿æ€ä¿¡æ¯ */
+    /* DONE: Ìí¼ÓÈËÎ»ÖÃĞÅÏ¢ÀàĞÍ */
     MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST
 } MmwDemo_output_message_type;
 
@@ -100,45 +100,44 @@ typedef enum MmwDemo_output_message_type_e
  * @details
  *  The structure defines the message header.
  */
-    typedef struct MmwDemo_output_message_header_t{
-        /*! @brief   Output buffer magic word (sync word). It is initialized to  {0x0102,0x0304,0x0506,0x0708} */
-        uint16_t magicWord[4];
+typedef struct MmwDemo_output_message_header_t{
+    /*! @brief   Output buffer magic word (sync word). It is initialized to  {0x0102,0x0304,0x0506,0x0708} */
+    uint16_t magicWord[4];
 
-        /*! @brief SW Version: : MajorNum * 2^24 + MinorNum * 2^16 + BugfixNum * 2^8 + BuildNum   */
-        uint32_t version;
+    /*! @brief SW Version: : MajorNum * 2^24 + MinorNum * 2^16 + BugfixNum * 2^8 + BuildNum   */
+    uint32_t version;
 
-        /*! @brief HW platform type */
-        uint32_t platform;
+    /*! @brief HW platform type */
+    uint32_t platform;
 
-        /*! @brief Time in CPU cycles when the message was created, R4F CPU cycles */
-        uint32_t timeStamp;
+    /*! @brief Time in CPU cycles when the message was created, R4F CPU cycles */
+    uint32_t timeStamp;
 
-        /*! @brief   Total packet length including header in Bytes */
-        uint32_t totalPacketLen;
+    /*! @brief   Total packet length including header in Bytes */
+    uint32_t totalPacketLen;
 
-        /*! @brief   Frame number */
-        uint32_t frameNumber;
+    /*! @brief   Frame number */
+    uint32_t frameNumber;
 
-        /*! @brief   For Advanced Frame config, this is the sub-frame number in the range
-     * 0 to (number of subframes - 1). For frame config (not advanced), this is always
-     * set to 0. */
-        uint32_t subFrameNumber;
+    /*! @brief   For Advanced Frame config, this is the sub-frame number in the range
+ * 0 to (number of subframes - 1). For frame config (not advanced), this is always
+ * set to 0. */
+    uint32_t subFrameNumber;
 
-        /*! @brief Detection Layer Margins */
-        uint32_t chirpProcessingMargin;
-        uint32_t frameProcessingMargin;
+    /*! @brief Detection Layer Margins */
+    uint32_t chirpProcessingMargin;
+    uint32_t frameProcessingMargin;
 
-        /*! @brief Localization Layer Timing */
-        uint32_t trackingProcessingTime;
-        uint32_t uartSendingTime;
+    /*! @brief Localization Layer Timing */
+    uint32_t trackingProcessingTime;
+    uint32_t uartSendingTime;
 
-        /*! @brief Number of TLVs in this message*/
-        uint16_t numTLVs;
-        /*! @brief Header checksum */
-        uint16_t checksum;
+    /*! @brief Number of TLVs in this message*/
+    uint16_t numTLVs;
+    /*! @brief Header checksum */
+    uint16_t checksum;
 
-    }
-MmwDemo_output_message_header;
+} MmwDemo_output_message_header;
 
 /*!
  * @brief
@@ -234,27 +233,27 @@ typedef struct MmwDemo_output_message_pointCloud_t
     GTRACK_measurementPoint         point[1];
 } MmwDemo_output_message_pointCloud;
 
-/* DONE:äººä½“ä½ç½®å§¿æ€ç›¸å…³æ•°æ®ç»“æ„  Add man information about position/posture */
+/* DONE:ÈËÌåÎ»ÖÃ×ËÌ¬Ïà¹ØÊı¾İ½á¹¹  Add man information about position/posture */
 
 enum POSTURE_STATE {UNKNOWN = 0, STANCE, SITTING, LYING};
 /*!
  * @brief
- * 
+ *
  *
  * @details
- * äººä½“ä¿¡æ¯æ•°æ®ç»“æ„
+ * ÈËÌåĞÅÏ¢Êı¾İ½á¹¹
  */
 typedef struct MmwDemo_output_message_manPosition3D_t
 {
-    uint32_t tid; //å¯¹è±¡ID
-    float posX; //Xåæ ‡ m
-    float posY; //Yåæ ‡ m
-    float posZ; //Zåæ ‡ mï¼Œ ä¹Ÿè¡¨ç¤ºå½“å‰äººçš„é«˜åº¦
-    float velX; //Xæ–¹å‘é€Ÿåº¦ m / s
-    float velY; //Yæ–¹å‘é€Ÿåº¦ m / s
-    float velZ; //Zæ–¹å‘é€Ÿåº¦ m / s
-    float manMaxHeight; //äººçš„èº«é«˜ m
-    enum POSTURE_STATE manPosture; //äººçš„å§¿æ€ æšä¸¾(æœªçŸ¥ã€ç«™ã€åã€èºº)
+    uint32_t tid; //¶ÔÏóID
+    float posX; //X×ø±ê m
+    float posY; //Y×ø±ê m
+    float posZ; //Z×ø±ê m£¬ Ò²±íÊ¾µ±Ç°ÈËµÄ¸ß¶È
+    float velX; //X·½ÏòËÙ¶È m / s
+    float velY; //Y·½ÏòËÙ¶È m / s
+    float velZ; //Z·½ÏòËÙ¶È m / s
+    float manMaxHeight; //ÈËµÄÉí¸ß m
+    enum POSTURE_STATE manPosture; //ÈËµÄ×ËÌ¬ Ã¶¾Ù(Î´Öª¡¢Õ¾¡¢×ø¡¢ÌÉ)
 } MmwDemo_output_message_manPosition3D;
 
 typedef struct MmwDemo_output_message_manPositionDescr_t

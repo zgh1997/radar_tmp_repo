@@ -237,9 +237,6 @@ typedef struct MmwDemo_MCB_t
     /*! @brief   Target Descriptors */
     MmwDemo_targetDescrHandle   *targetDescrHandle;
 
-    /*INFO: 使用targetDescription计算人体信息列表 */
-    MmwDemo_output_message_manPositionDescr *manPositionDescr;
-
     /*! @brief   Tracker Handle */
     void     					        *gtrackHandle;
 
