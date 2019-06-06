@@ -262,7 +262,7 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 				{
 					uid = tElemActive->data;
 					uinst = (GtrackUnitInstance *)inst->hTrack[uid];
-					if ((pos.posZ > 1.6f) && (uinst->S_hat[8] > 1.0f)) //uinst->S_hat[8]为accX
+					if ((pos.posZ > 1.6f) && (uinst->S_hat[8] > 1.0f)) //uinst->S_hat[8]为accZ
 					{
 						handCauseNum++;
 						if (handCauseNum > 10)

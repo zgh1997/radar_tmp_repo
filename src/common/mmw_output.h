@@ -89,8 +89,11 @@ typedef enum MmwDemo_output_message_type_e
 
     MMWDEMO_OUTPUT_MSG_MAX,
 
-    /* DONE: Ìí¼ÓÈËÎ»ÖÃĞÅÏ¢ÀàĞÍ */
+    /* DONE: äººä½“ä½ç½® list (11) */
     MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST
+
+    /* DONE: è‡ªå®šä¹‰è°ƒè¯•æ•°æ® list (12) */
+    MMWDEMO_OUTPUT_MSG_DEBUG_INFO_LIST:
 } MmwDemo_output_message_type;
 
 /*!
@@ -233,7 +236,7 @@ typedef struct MmwDemo_output_message_pointCloud_t
     GTRACK_measurementPoint         point[1];
 } MmwDemo_output_message_pointCloud;
 
-/* DONE:ÈËÌåÎ»ÖÃ×ËÌ¬Ïà¹ØÊı¾İ½á¹¹  Add man information about position/posture */
+/* DONE:äººä½“æ•°æ®  Add man information about position/posture */
 
 enum POSTURE_STATE {UNKNOWN = 0, STANCE, SITTING, LYING};
 /*!
@@ -241,19 +244,19 @@ enum POSTURE_STATE {UNKNOWN = 0, STANCE, SITTING, LYING};
  *
  *
  * @details
- * ÈËÌåĞÅÏ¢Êı¾İ½á¹¹
+ * äººä½“æ•°æ®æ•°æ®ç»“æ„
  */
 typedef struct MmwDemo_output_message_manPosition3D_t
 {
-    uint32_t tid; //¶ÔÏóID
-    float posX; //X×ø±ê m
-    float posY; //Y×ø±ê m
-    float posZ; //Z×ø±ê m£¬ Ò²±íÊ¾µ±Ç°ÈËµÄ¸ß¶È
-    float velX; //X·½ÏòËÙ¶È m / s
-    float velY; //Y·½ÏòËÙ¶È m / s
-    float velZ; //Z·½ÏòËÙ¶È m / s
-    float manMaxHeight; //ÈËµÄÉí¸ß m
-    enum POSTURE_STATE manPosture; //ÈËµÄ×ËÌ¬ Ã¶¾Ù(Î´Öª¡¢Õ¾¡¢×ø¡¢ÌÉ)
+    uint32_t tid; //ID
+    float posX; //X pos m
+    float posY; //Y pos m
+    float posZ; //Z pos m
+    float velX; //X vel m / s
+    float velY; //Y vel m / s
+    float velZ; //Z vel m / s
+    float manMaxHeight; //static height m
+    enum POSTURE_STATE manPosture; //posture(unknown,stance,sitting,lying)
 } MmwDemo_output_message_manPosition3D;
 
 typedef struct MmwDemo_output_message_manPositionDescr_t
