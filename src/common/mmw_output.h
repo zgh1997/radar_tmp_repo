@@ -292,6 +292,7 @@ typedef struct MmwDemo_output_message_target_t
     /*! @brief   Detected target Y acceleration, in m/s2 */
     float       accY;
     float       accZ;
+
 #ifndef ShortTarget
     /*! @brief   Target Error covarience matrix, [3x3 float], in row major order, range, azimuth, doppler */
     float		ec[16];

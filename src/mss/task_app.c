@@ -196,7 +196,11 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
     /* INFO: 计算部分添加人体位置列表 */
     MmwDemo_output_message_manPositionDescr* manPositionDescr;
     static float maxHeights[30];
+    static int heightCount[30];
+    static int targetExist[30];
     float heightRate = 0.75;
+    float manMaxHeight = 1.98;
+    float manMinHeight = 1.68;
 
 	//GTRACK_measurementPoint *points;
     GTRACK_measurement_vector *variances;
@@ -219,6 +223,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
 
     /* TODO: 将targetDescrHandle中的targetList传入聚类模块。在此添加计算身高部分 */
     memset((void*)maxHeights, 0, sizeof(float)*30);
+    memset((void*)heightCount, 0, sizeof(int)*30);
 
 	benchmarks = gMmwMssMCB.mssDataPathObj.cycleLog.benchmarks;
     /* wait for new message and process all the messages received from the peer */
@@ -246,6 +251,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         variances = NULL;
 
         gtrack_step(gMmwMssMCB.gtrackHandle, gMmwMssMCB.pointCloud->point, variances, mNum, targetDescr, &tNum, targetIndex->index, benchmarks);
+        memset((void*)targetExist, 0, sizeof(int)*30);
 
         for(n=0; n<tNum; n++) {
             targetList->target[n].tid  = (uint32_t)targetDescr[n].uid;
@@ -270,10 +276,11 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         for (n = 0; n < tNum; n++)
         {
             manPositionDescr->position[n].tid = (uint32_t)targetDescr[n].uid;
+            targetExist[manPositionDescr->position[n].tid] = 1;
 
             manPositionDescr->position[n].posX = targetDescr[n].S[0];
             manPositionDescr->position[n].posY = targetDescr[n].S[1];
-            manPositionDescr->position[n].posZ = 1.6 + targetDescr[n].S[2];
+            manPositionDescr->position[n].posZ = 1.75 + targetDescr[n].S[2];
             manPositionDescr->position[n].velX = targetDescr[n].S[3];
             manPositionDescr->position[n].velY = targetDescr[n].S[4];
             manPositionDescr->position[n].velZ = targetDescr[n].S[5];
@@ -281,6 +288,9 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
             // Update manMaxHeight on chip
             if (manPositionDescr->position[n].posZ >= 1e-6)
             {
+                // 如果heightCount大于100，则不做更改
+                if (heightCount[manPositionDescr->position[n].tid] >= 200)
+                    break;
                 // TODO: 更改为权重计算
                 // 原有的占98%，新来数据占2%，如果高度为0，则设为Z轴数据
                 if (maxHeights[manPositionDescr->position[n].tid] <= 1e-6)
@@ -288,9 +298,10 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
                 else
                     maxHeights[manPositionDescr->position[n].tid] = manPositionDescr->position[n].posZ * 0.02 + maxHeights[manPositionDescr->position[n].tid] * 0.98;
 
-                if(maxHeights[manPositionDescr->position[n].tid] >= 2.0){
-                    maxHeights[manPositionDescr->position[n].tid] = 2.0;
+                if(maxHeights[manPositionDescr->position[n].tid] >= manMaxHeight){
+                    maxHeights[manPositionDescr->position[n].tid] = manMaxHeight;
                 }
+                heightCount[manPositionDescr->position[n].tid]++;
 
 //                if (manPositionDescr->position[n].posZ > maxHeights[manPositionDescr->position[n].tid]){
 //                    maxHeights[manPositionDescr->position[n].tid] = manPositionDescr->position[n].posZ;
@@ -302,18 +313,38 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
             }
             // TODO: 添加身高记录
             manPositionDescr->position[n].manMaxHeight = maxHeights[manPositionDescr->position[n].tid];
-            
+            // TODO: 美化身高数据
+            if (manPositionDescr->position[n].manMaxHeight < manMinHeight)
+            {
+                float maxDis = manMaxHeight - manPositionDescr->position[n].manMaxHeight;
+                float minDis = manMinHeight - manPositionDescr->position[n].manMaxHeight;
+                float heightRange = minDis / maxDis;
+                manPositionDescr->position[n].manMaxHeight = manMinHeight + (manMaxHeight - manMinHeight) * heightRange;
+                maxHeights[manPositionDescr->position[n].tid] = manPositionDescr->position[n].manMaxHeight;
+                //manPositionDescr->position[n].posZ = manPositionDescr->position[n].manMaxHeight;
+            }
             // Confirm posture by current height
             heightRate = manPositionDescr->position[n].posZ / manPositionDescr->position[n].manMaxHeight;
-            if (heightRate >= 0.85){
+            // TODO: 计算姿态
+            if (heightRate >= 0.75){
                 manPositionDescr->position[n].manPosture = STANCE;
             }
-            else if (heightRate >= 0.5){
+            else if (heightRate >= 0.35){
                 manPositionDescr->position[n].manPosture = SITTING;
             } else if(heightRate >= 0.1){
                 manPositionDescr->position[n].manPosture = LYING;
             } else{
                 manPositionDescr->position[n].manPosture= UNKNOWN;
+            }
+        }
+
+        // TODO: 如果对应id的target不存在，则把heightCount,maxHeights重置为0
+        for (n = 0; n < 30; n++)
+        {
+            if (!targetExist[n])
+            {
+                maxHeights[n] = 0.0;
+                heightCount[n] = 0;
             }
         }
 

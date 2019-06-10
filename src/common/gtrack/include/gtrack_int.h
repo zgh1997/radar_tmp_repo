@@ -326,6 +326,7 @@ typedef struct
 	/**  @brief Scoring Factor */
 	float		sFactor;
 
+    // TODO: snr添加至inst中
 } GtrackUnitInstance;
 
 /**

@@ -69,4 +69,8 @@ void gtrack_unitReport(void *handle, GTRACK_targetDesc *target)
 	memcpy(target->EC, inst->ec, sizeof(target->EC));
 	target->G = inst->G;
     memcpy(target->dim, inst->estDim, sizeof(target->dim));
+	// TODO: SNR 添加snr的数据传递
+	//target->targetSnr = 
+
+	// target->targetSnr = inst->
 }

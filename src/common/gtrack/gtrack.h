@@ -596,6 +596,8 @@ typedef struct
 	/**  @brief   Estimated target dimensions: depth, width, [height], doppler */
 	float dim[GTRACK_MEASUREMENT_VECTOR_SIZE];
 
+    //INFO: 添加target的SNR
+    float targetSnr;
 } GTRACK_targetDesc;
 
 extern void *gtrack_create(GTRACK_moduleConfig *config, int32_t *errCode);
