@@ -75,7 +75,7 @@ typedef enum MmwDemo_output_message_type_e
     /*! @brief   Range/Doppler detection matrix */
     MMWDEMO_OUTPUT_MSG_RANGE_DOPPLER_HEAT_MAP,
 
-    /*! @brief   Point Cloud - Array of detected points (range/angle/doppler) */
+    /*! @brief   Point Cloud - Array of detected points (range/angle/doppler) (6)*/
     MMWDEMO_OUTPUT_MSG_POINT_CLOUD,
 
     /*! @brief   Target List - Array of detected targets (position, velocity, error covariance) */
@@ -89,11 +89,11 @@ typedef enum MmwDemo_output_message_type_e
 
     MMWDEMO_OUTPUT_MSG_MAX,
 
-    /* DONE: 人体位置 list (11) */
+    /* DONE: Man position list (11) */
     MMWDEMO_OUTPUT_MSG_MAN_POSITION_LIST
 
-    /* DONE: 自定义调试数据 list (12) */
-    MMWDEMO_OUTPUT_MSG_DEBUG_INFO_LIST:
+    /* DONE: target snr list (12) */
+
 } MmwDemo_output_message_type;
 
 /*!
@@ -236,7 +236,7 @@ typedef struct MmwDemo_output_message_pointCloud_t
     GTRACK_measurementPoint         point[1];
 } MmwDemo_output_message_pointCloud;
 
-/* DONE:人体数据  Add man information about position/posture */
+/* DONE  Add man information about position/posture */
 
 enum POSTURE_STATE {UNKNOWN = 0, STANCE, SITTING, LYING};
 /*!
@@ -244,7 +244,7 @@ enum POSTURE_STATE {UNKNOWN = 0, STANCE, SITTING, LYING};
  *
  *
  * @details
- * 人体数据数据结构
+ * 
  */
 typedef struct MmwDemo_output_message_manPosition3D_t
 {
@@ -257,6 +257,7 @@ typedef struct MmwDemo_output_message_manPosition3D_t
     float velZ; //Z vel m / s
     float manMaxHeight; //static height m
     enum POSTURE_STATE manPosture; //posture(unknown,stance,sitting,lying)
+    float manSNR; // SNR
 } MmwDemo_output_message_manPosition3D;
 
 typedef struct MmwDemo_output_message_manPositionDescr_t

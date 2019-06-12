@@ -288,6 +288,9 @@ void gtrack_moduleAllocate(GtrackModuleInstance *inst, GTRACK_measurementPoint *
 					inst->targetNumCurrent++; //Number of currently tracked Targets: 当前跟踪目标数量
 					tElemFree = gtrack_listDequeue(&inst->freeList);
 
+					// FIXME: 将聚类中心信噪比加入inst->hTrack[tElemFree->data]中，即相应的unit中
+					inst->hTrack[tElemFree->data]->unitSNR = allocSNR;
+
 					gtrack_unitStart(inst->hTrack[tElemFree->data], inst->heartBeat, inst->targetNumTotal, &mCenter.vector);
 					gtrack_listEnqueue(&inst->activeList, tElemFree);
 				}

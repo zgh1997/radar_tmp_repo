@@ -327,6 +327,7 @@ typedef struct
 	float		sFactor;
 
     // TODO: snr添加至inst中
+    float       unitSNR;
 } GtrackUnitInstance;
 
 /**

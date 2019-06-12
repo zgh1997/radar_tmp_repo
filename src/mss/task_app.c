@@ -165,6 +165,7 @@ GTRACK_varParams appVariationParamTable[2] = {
 
 float maxAccelerationParams[3] = {0.1, 0.1, 0.1};
 
+int maxTidNum = 250;
 /**
  * @brief
  *  Global Variable for tracking information required by the mmw Demo
@@ -195,9 +196,9 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
 
     /* INFO: 计算部分添加人体位置列表 */
     MmwDemo_output_message_manPositionDescr* manPositionDescr;
-    static float maxHeights[30];
-    static int heightCount[30];
-    static int targetExist[30];
+    static float maxHeights[250];
+    static int heightCount[250];
+    static int targetExist[250];
     float heightRate = 0.75;
     float manMaxHeight = 1.98;
     float manMinHeight = 1.68;
@@ -222,10 +223,10 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
     memset ((void *)&targetDescr, 0, sizeof(GTRACK_targetDesc)*20);
 
     /* TODO: 将targetDescrHandle中的targetList传入聚类模块。在此添加计算身高部分 */
-    memset((void*)maxHeights, 0, sizeof(float)*30);
-    memset((void*)heightCount, 0, sizeof(int)*30);
+    memset((void*)maxHeights, 0, sizeof(float)*maxTidNum);
+    memset((void *)heightCount, 0, sizeof(int) * maxTidNum);
 
-	benchmarks = gMmwMssMCB.mssDataPathObj.cycleLog.benchmarks;
+    benchmarks = gMmwMssMCB.mssDataPathObj.cycleLog.benchmarks;
     /* wait for new message and process all the messages received from the peer */
 //	debug = sizeof(GTRACK_measurementPoint);
 //	System_printf("GTrack Target Descr size: %i\n", debug);
@@ -251,7 +252,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         variances = NULL;
 
         gtrack_step(gMmwMssMCB.gtrackHandle, gMmwMssMCB.pointCloud->point, variances, mNum, targetDescr, &tNum, targetIndex->index, benchmarks);
-        memset((void*)targetExist, 0, sizeof(int)*30);
+        memset((void*)targetExist, 0, sizeof(int)*maxTidNum);
 
         for(n=0; n<tNum; n++) {
             targetList->target[n].tid  = (uint32_t)targetDescr[n].uid;
@@ -284,6 +285,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
             manPositionDescr->position[n].velX = targetDescr[n].S[3];
             manPositionDescr->position[n].velY = targetDescr[n].S[4];
             manPositionDescr->position[n].velZ = targetDescr[n].S[5];
+            manPositionDescr->position[n].manSNR = targetDescr[n].targetSNR;
 
             // Update manMaxHeight on chip
             if (manPositionDescr->position[n].posZ >= 1e-6)
@@ -326,7 +328,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
             // Confirm posture by current height
             heightRate = manPositionDescr->position[n].posZ / manPositionDescr->position[n].manMaxHeight;
             // TODO: 计算姿态
-            if (heightRate >= 0.75){
+            if (heightRate >= 0.85){
                 manPositionDescr->position[n].manPosture = STANCE;
             }
             else if (heightRate >= 0.35){
@@ -339,7 +341,7 @@ void MmwDemo_appTask(UArg arg0, UArg arg1)
         }
 
         // TODO: 如果对应id的target不存在，则把heightCount,maxHeights重置为0
-        for (n = 0; n < 30; n++)
+        for (n = 0; n < maxTidNum; n++)
         {
             if (!targetExist[n])
             {
